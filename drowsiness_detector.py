@@ -221,10 +221,6 @@ def main():
                 if closed_frames >= SLEEP_FRAMES:
                     alarm_playing = True
                     cv2.putText(
-                        frame, "!!! DROWSINESS ALERT !!!",
-                        (80, 80), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 255), 3,
-                    )
-                    cv2.putText(
                         frame, "Wake up! You seem to be falling asleep!",
                         (100, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2,
                     )
