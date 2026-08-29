@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+*.freebuff
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Downloaded model (auto-downloaded, ~4MB binary)
+face_landmarker.task
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Freebuff
+.freebuff
