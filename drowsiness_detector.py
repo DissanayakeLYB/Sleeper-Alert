@@ -90,8 +90,8 @@ def main():
     )
     parser.add_argument(
         "-e", "--ear-threshold",
-        type=float, default=0.28,
-        help="EAR value below which eyes are considered closed (default: 0.28)",
+        type=float, default=0.2,
+        help="EAR value below which eyes are considered closed (default: 0.2)",
     )
     parser.add_argument(
         "-s", "--sleep-threshold",
