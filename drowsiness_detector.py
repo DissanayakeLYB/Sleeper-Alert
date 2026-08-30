@@ -90,8 +90,8 @@ def main():
     )
     parser.add_argument(
         "-e", "--ear-threshold",
-        type=float, default=0.2,
-        help="EAR value below which eyes are considered closed (default: 0.2)",
+        type=float, default=0.25,
+        help="EAR value below which eyes are considered closed (default: 0.25)",
     )
     parser.add_argument(
         "-s", "--sleep-threshold",
@@ -107,6 +107,11 @@ def main():
         "-c", "--camera",
         type=int, default=0,
         help="Camera index (default: 0)",
+    )
+    parser.add_argument(
+        "--no-display",
+        action="store_true",
+        help="Run without showing the camera window. Stop with Ctrl+C.",
     )
     args = parser.parse_args()
 
@@ -158,7 +163,10 @@ def main():
     display_fps = 0
     frame_idx = 0
 
-    print("[INFO] Running — press 'q' to quit.")
+    if args.no_display:
+        print("[INFO] Running in headless mode — press Ctrl+C to stop.")
+    else:
+        print("[INFO] Running — press 'q' to quit.")
     print(f"[INFO] EAR threshold: {EYE_AR_THRESH} | Sleep frame threshold: {SLEEP_FRAMES}")
     print()
 
@@ -202,28 +210,39 @@ def main():
             right_ear = eye_aspect_ratio(right_eye)
             ear = (left_ear + right_ear) / 2.0
 
-            # Draw eye contours for visual feedback
-            left_pts = np.array(left_eye, dtype=np.int32)
-            right_pts = np.array(right_eye, dtype=np.int32)
-            cv2.polylines(frame, [left_pts], True, (0, 255, 0), 1)
-            cv2.polylines(frame, [right_pts], True, (0, 255, 0), 1)
+            if not args.no_display:
+                # Draw eye contours for visual feedback
+                left_pts = np.array(left_eye, dtype=np.int32)
+                right_pts = np.array(right_eye, dtype=np.int32)
+                cv2.polylines(frame, [left_pts], True, (0, 255, 0), 1)
+                cv2.polylines(frame, [right_pts], True, (0, 255, 0), 1)
 
+                # Show EAR and counter
+                if ear < EYE_AR_THRESH:
+                    cv2.putText(
+                        frame, f"EAR: {ear:.3f}  (closed: {closed_frames}/{SLEEP_FRAMES})",
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2,
+                    )
+                else:
+                    cv2.putText(
+                        frame, f"EAR: {ear:.3f}  [EYES OPEN]",
+                        (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2,
+                    )
+
+        if result.face_landmarks:
             # --- Drowsiness logic ---
             if ear < EYE_AR_THRESH:
                 closed_frames += 1
 
-                # Show EAR and counter
-                cv2.putText(
-                    frame, f"EAR: {ear:.3f}  (closed: {closed_frames}/{SLEEP_FRAMES})",
-                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2,
-                )
-
                 if closed_frames >= SLEEP_FRAMES:
                     alarm_playing = True
-                    cv2.putText(
-                        frame, "Wake up! You seem to be falling asleep!",
-                        (100, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2,
-                    )
+                    if not args.no_display:
+                        cv2.putText(
+                            frame, "Wake up! You seem to be falling asleep!",
+                            (100, 120), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2,
+                        )
+                    else:
+                        print("[ALARM] Wake up! You seem to be falling asleep!")
                     play_alarm(args.alarm_beeps)
 
             else:
@@ -231,33 +250,31 @@ def main():
                     print("[INFO] User woke up. Alarm stopped.")
                 closed_frames = 0
                 alarm_playing = False
-                cv2.putText(
-                    frame, f"EAR: {ear:.3f}  [EYES OPEN]",
-                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2,
-                )
-        else:
+        elif not args.no_display:
             cv2.putText(
                 frame, "No face detected — look at the camera",
                 (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2,
             )
 
-        # Show FPS
-        cv2.putText(
-            frame, f"FPS: {display_fps}",
-            (10, frame_h - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1,
-        )
+        if not args.no_display:
+            # Show FPS
+            cv2.putText(
+                frame, f"FPS: {display_fps}",
+                (10, frame_h - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1,
+            )
 
-        cv2.imshow("Drowsiness Detector", frame)
+            cv2.imshow("Drowsiness Detector", frame)
 
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord("q"):
-            break
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("q"):
+                break
 
         frame_idx += 1
 
     # --- Cleanup ----------------------------------------------------------
     cap.release()
-    cv2.destroyAllWindows()
+    if not args.no_display:
+        cv2.destroyAllWindows()
     landmarker.close()
     print("[INFO] Detector stopped.")
 

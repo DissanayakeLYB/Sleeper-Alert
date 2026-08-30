@@ -35,7 +35,7 @@ Press `q` to quit.
 
 ```bash
 python drowsiness_detector.py --ear-threshold 0.25    # lower = stricter
-python drowsiness_detector.py --sleep-threshold 20    # fewer frames before alarm
+python drowsiness_detector.py --sleep-threshold 100    # frames before alarm
 python drowsiness_detector.py --alarm-beeps 5         # more beeps per alarm
 python drowsiness_detector.py --camera 1              # use second camera
 ```
